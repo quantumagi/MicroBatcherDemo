@@ -38,7 +38,7 @@ public class MicroBatcherTests
         });
 
         // Create and start the batcher.
-        using (var batcher = new MicroBatcher<int, int>(batchProcessorMock.Object, batchSize, TimeSpan.FromSeconds(1), maxAsyncBatches))
+        await using (var batcher = new MicroBatcher<int, int>(batchProcessorMock.Object, batchSize, TimeSpan.FromSeconds(1), maxAsyncBatches))
         {
             batcher.Startup();
 
@@ -68,7 +68,7 @@ public class MicroBatcherTests
         });
 
         // Create and start the batcher.
-        using (var batcher = new MicroBatcher<int, int>(batchProcessorMock.Object, 10, TimeSpan.FromSeconds(1)))
+        await using (var batcher = new MicroBatcher<int, int>(batchProcessorMock.Object, 10, TimeSpan.FromSeconds(1)))
         {
             batcher.Startup();
 

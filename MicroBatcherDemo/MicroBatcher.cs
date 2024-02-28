@@ -18,7 +18,7 @@ namespace MicroBatcherDemo;
 /// jobs and results that can be processed. Importantly, it does not require the classes to be derived from a specific base class
 /// or implement a specific interface.
 /// </remarks>
-public class MicroBatcher<TJob, TJobResult> : IDisposable
+public class MicroBatcher<TJob, TJobResult> : IDisposable, IAsyncDisposable
 {
     private readonly object lockObj;
     private readonly IBatchProcessor<TJob, TJobResult> batchProcessor;
@@ -353,23 +353,60 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
         }
     }
 
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources synchronously.
+    /// </summary>
     public void Dispose()
     {
+        // Dispose of managed resources and suppress finalization.
         Dispose(true);
+        // Suppress finalization to prevent the finalizer from calling ~Dispose() for this object,
+        // as resources will already have been released by this point.
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Protected implementation of Dispose pattern.
+    /// </summary>
+    /// <param name="disposing">A boolean value indicating whether the method has been called directly or indirectly by a user's code.</param>
     protected virtual void Dispose(bool disposing)
     {
+        // Check to see if Dispose has already been called.
         if (!disposed)
         {
+            // If disposing equals true, dispose all managed and unmanaged resources.
             if (disposing)
             {
+                // Dispose managed resources here.
+                // Blockingly waits for the asynchronous shutdown process to complete.
+                // Note: This may potentially cause deadlocks in certain scenarios,
+                // such as when called from a UI thread. Use with caution.
                 this.ShutdownAsync().Wait();
             }
 
-            // Free unmanaged resources (if any) here.
+            // Free unmanaged resources here and perform other cleanup operations.
+            // For example: set large fields to null.
+
+            // Mark the disposal as done.
             disposed = true;
         }
+    }
+
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources asynchronously.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous dispose operation.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        // Perform asynchronous cleanup operations.
+        // Await the ShutdownAsync method without capturing the synchronization context.
+        await ShutdownAsync().ConfigureAwait(false);
+
+        // Dispose of synchronous (managed) resources.
+        // Note: Since we're performing asynchronous disposal, we pass 'false' to not repeat freeing managed resources.
+        Dispose(false);
+
+        // Suppress finalization.
+        GC.SuppressFinalize(this);
     }
 }
