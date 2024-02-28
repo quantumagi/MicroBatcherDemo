@@ -360,6 +360,7 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable, IAsyncDisposable
     {
         // Dispose of managed resources and suppress finalization.
         Dispose(true);
+
         // Suppress finalization to prevent the finalizer from calling ~Dispose() for this object,
         // as resources will already have been released by this point.
         GC.SuppressFinalize(this);
