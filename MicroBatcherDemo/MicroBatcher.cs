@@ -143,7 +143,7 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
                 {
                     try
                     {
-                        await Task.Delay((int)this.batchFrequency.TotalMilliseconds, cancellationTokenSource.Token);
+                        await Task.Delay((int)this.batchFrequency.TotalMilliseconds, cancellationTokenSource.Token).ConfigureAwait(false);
                     }
                     catch (TaskCanceledException)
                     {
@@ -153,11 +153,11 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
 
                     if (this.maxAsyncBatches > 1)
                     {
-                        await ProcessBatchesAsync();
+                        await ProcessBatchesAsync().ConfigureAwait(false);
                     }
                     else
                     {
-                        await ProcessBatchAsync();
+                        await ProcessBatchAsync().ConfigureAwait(false);
                     }
 
                 // This short-duration lock ensures atomicity of the job queue and queueEmptyCompletionSource access.
@@ -207,13 +207,13 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
         try
         {
             // Wait for queue to empty.
-            await queueEmptyCompletionSource.Task;
+            await queueEmptyCompletionSource.Task.ConfigureAwait(false);
 
             // Signal the processing task to complete.
             this.cancellationTokenSource.Cancel();
 
             // Wait for the processing task to complete.
-            await this.processingTask;
+            await this.processingTask.ConfigureAwait(false);
         }
         finally
         {
@@ -288,7 +288,7 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
                 break;
         }
 
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -326,7 +326,7 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
             try
             {
                 // Process the batch by invoking the batch processor.
-                List<TJobResult> results = await batchProcessor.ProcessBatchAsync(batchJobs);
+                List<TJobResult> results = await batchProcessor.ProcessBatchAsync(batchJobs).ConfigureAwait(false);
 
                 // Transfer the job results to the completion sources.
                 for (int i = 0; i < batchCompletionSources.Count; i++)
@@ -345,7 +345,7 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
             {
                 // The batch processor should handle its errors and not raise any errors.
                 // This is the most elegant way to deal with errors if they do happen.
-                foreach (var source in batchCompletionSources.Where(s => !s.Task.IsCompleted))
+                foreach (var source in batchCompletionSources)
                 {
                     source.SetException(ex);
                 }

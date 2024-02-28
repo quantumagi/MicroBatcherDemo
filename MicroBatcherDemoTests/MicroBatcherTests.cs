@@ -27,16 +27,15 @@ public class MicroBatcherTests
         // Create a mock batch processor.
         // This batch processor just does x >= x * 2.
         var batchProcessorMock = new Mock<IBatchProcessor<int, int>>();
-        batchProcessorMock.Setup(x => x.ProcessBatchAsync(It.IsAny<List<int>>()))
-            .Returns((List<int> jobs) =>
-            {
+        batchProcessorMock.Setup(x => x.ProcessBatchAsync(It.IsAny<List<int>>())).Returns((List<int> jobs) =>
+        {
             // Check that the batch size is being respected.
             Assert.True(jobs.Count <= numJobs);
 
             // Multiply the input by 2.
             var res = jobs.Select(x => x * 2).ToList();
-                return Task.FromResult(res);
-            });
+            return Task.FromResult(res);
+        });
 
         // Create and start the batcher.
         using (var batcher = new MicroBatcher<int, int>(batchProcessorMock.Object, batchSize, TimeSpan.FromSeconds(1), maxAsyncBatches))
@@ -63,11 +62,10 @@ public class MicroBatcherTests
         // Create a mock batch processor.
         // This batch processor will just throw an error.
         var batchProcessorMock = new Mock<IBatchProcessor<int, int>>();
-        batchProcessorMock.Setup(x => x.ProcessBatchAsync(It.IsAny<List<int>>()))
-            .Returns((List<int> jobs) =>
-            {
-                throw new Exception("Batch processor error");
-            });
+        batchProcessorMock.Setup(x => x.ProcessBatchAsync(It.IsAny<List<int>>())).Returns((List<int> jobs) =>
+        {
+            throw new Exception("Batch processor error");
+        });
 
         // Create and start the batcher.
         using (var batcher = new MicroBatcher<int, int>(batchProcessorMock.Object, 10, TimeSpan.FromSeconds(1)))
