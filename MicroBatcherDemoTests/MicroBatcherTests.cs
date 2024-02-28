@@ -10,15 +10,16 @@ public class MicroBatcherTests
     /// <summary>
     /// Running tests with different number of jobs and batch sizes.
     /// </summary>
-    /// <param name="numJobs">The number of jobs.</param>
-    /// <param name="batchSize">The batch size.</param>
+    /// <param name="numJobs">Number of jobs.</param>
+    /// <param name="batchSize">Batch size.</param>
+    /// <param name="maxAsyncBatches">Number of maximum asynchronous batches.</param>
     [Theory]
-    [InlineData(1, 10)]
-    [InlineData(10, 10)]
-    [InlineData(23, 10)]
-    [InlineData(3, 1)]
-    [InlineData(1, 1)]
-    public async Task CanBatchJobs(int numJobs, int batchSize)
+    [InlineData(1, 10, 3)]
+    [InlineData(10, 10, 1)]
+    [InlineData(23, 10, 3)]
+    [InlineData(3, 1, 3)]
+    [InlineData(1, 1, 1)]
+    public async Task CanBatchJobs(int numJobs, int batchSize, int maxAsyncBatches)
     {
         // Create a mock batch processor.
         // This batch processor just does x >= x * 2.
@@ -35,7 +36,7 @@ public class MicroBatcherTests
             });
 
         // Create and start the batcher.
-        using (var batcher = new MicroBatcher<int, int>(batchProcessorMock.Object, batchSize, TimeSpan.FromSeconds(1), 3))
+        using (var batcher = new MicroBatcher<int, int>(batchProcessorMock.Object, batchSize, TimeSpan.FromSeconds(1), maxAsyncBatches))
         {
             batcher.Startup();
 
