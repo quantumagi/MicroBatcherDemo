@@ -12,7 +12,7 @@ public class MicroBatcherTests
     /// </summary>
     /// <param name="numJobs">Number of jobs.</param>
     /// <param name="batchSize">Batch size.</param>
-    /// <param name="maxAsyncBatches">Number of maximum asynchronous batches.</param>
+    /// <param name="maxAsyncBatches">Maximum number of asynchronous batches.</param>
     [Theory]
     [InlineData(1, 10, 3)]
     [InlineData(10, 10, 1)]
