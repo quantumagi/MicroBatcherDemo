@@ -4,6 +4,9 @@ using Xunit;
 
 namespace MicroBatcherDemoTests;
 
+/// <summary>
+/// Test cases for <see cref="MicroBatcher{TJob, TJobResult}"/>.
+/// </summary>
 [Collection("MicroBatcherTests")]
 public class MicroBatcherTests
 {
@@ -19,7 +22,7 @@ public class MicroBatcherTests
     [InlineData(23, 10, 3)]
     [InlineData(3, 1, 3)]
     [InlineData(1, 1, 1)]
-    public async Task CanBatchJobs(int numJobs, int batchSize, int maxAsyncBatches)
+    public async Task SubmitJobAsync_WithGoodBatchProcessor_ProcessesJobs(int numJobs, int batchSize, int maxAsyncBatches)
     {
         // Create a mock batch processor.
         // This batch processor just does x >= x * 2.
@@ -55,7 +58,7 @@ public class MicroBatcherTests
     }
 
     [Fact]
-    public async Task BatchProcessorErrorThrowsError()
+    public async Task SubmitJobAsync_WithErrorInBatchProcessor_FailsJobsWithError()
     {
         // Create a mock batch processor.
         // This batch processor will just throw an error.

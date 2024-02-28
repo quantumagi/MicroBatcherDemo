@@ -5,7 +5,7 @@ namespace MicroBatcherDemo;
 /// <summary>
 /// Micro-batching is a technique used in processing pipelines where individual tasks are grouped
 /// together into small batches. This can improve throughput by reducing the number of requests made
-/// to a downstream system. The micro-batching library, fulfils the following requirements:<list type="bullet">
+/// to a downstream system. The micro-batching library, fulfills the following requirements:<list type="bullet">
 /// <item>It allows the caller to submit a single <see cref="TJob"/>, and it should return a <see cref="TJobResult"/>.</item>
 /// <item>It processes accepted <see cref="TJob"/>s in batches using a <see cref="IBatchProcessor"/>.</item>
 /// <item>It provides a way to configure the batching behaviour i.e. size and frequency.</item>
@@ -87,8 +87,7 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
     }
 
     /// <summary>
-    /// This method is constructed by the <see cref="MicroBatcherFactory" />.
-    /// It creates a new instance of the MicroBatcher class.
+    /// Creates a new instance of the MicroBatcher class.
     /// </summary>
     /// <param name="batchProcessor">Batch processor of type <see cref="IBatchProcessor"/>.</param>
     /// <param name="batchSize">Number of jobs to process in a single batch.</param>
@@ -307,9 +306,14 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
         // This short-duration lock ensures atomicity of the job queue access.
         lock (this.lockObj)
         {
-            // Dequeue up to config.BatchSize jobs. Order of "while" conditions are important.
-            while (batchJobs.Count < this.batchSize && this.jobQueue.TryDequeue(out (TJob job, TaskCompletionSource<TJobResult> completionSource) queueItem))
+            // Dequeue up to config.BatchSize jobs.
+            while (batchJobs.Count < this.batchSize)
             {
+                if (!this.jobQueue.TryDequeue(out (TJob job, TaskCompletionSource<TJobResult> completionSource) queueItem))
+                {
+                    break;
+                }
+
                 batchJobs.Add(queueItem.job);
                 batchCompletionSources.Add(queueItem.completionSource);
             }
@@ -325,9 +329,16 @@ public class MicroBatcher<TJob, TJobResult> : IDisposable
                 List<TJobResult> results = await batchProcessor.ProcessBatchAsync(batchJobs);
 
                 // Transfer the job results to the completion sources.
-                for (int i = 0; i < batchJobs.Count; i++)
+                for (int i = 0; i < batchCompletionSources.Count; i++)
                 {
-                    batchCompletionSources[i].TrySetResult(results[i]);
+                    if (i < results.Count)
+                    {
+                        batchCompletionSources[i].TrySetResult(results[i]);
+                    }
+                    else
+                    {
+                        batchCompletionSources[i].TrySetException(new InvalidOperationException("Batch processor did not return a result for the job."));
+                    }
                 }
             }
             catch (Exception ex)
